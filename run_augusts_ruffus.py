@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from ruffus import *
+import ruffus.cmdline as cmdline
+
 from subprocess import Popen, PIPE
 import shlex
 import sys
@@ -18,17 +20,13 @@ if MODULES_KEY in os.environ:
     # need this for faToTwoBit
     module('load', 'blat/default')
 
-parser = argparse.ArgumentParser(description='Use Ruffus to process .out files from genblastA')
+parser = cmdline.get_argparse(description='Use Ruffus to process .out files from genblastA')
 parser.add_argument('--working_directory', '-W', default='.')
 parser.add_argument('genome_filename', help='FASTA format genome file, must end in .fa or .fasta')
 parser.add_argument('hints_filename', help='Augustus hints filename, generate from exonerate')
 args = parser.parse_args()
 
-if args.debug:
-    logging.basicConfig(level=logging.DEBUG)
-else:
-    logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('run_augustus_ruffus')
+logger, logger_mutex = cmdline.setup_logging(__name__, args.log_file, args.verbose)
 
 
 FASTA_RE=r'\.(fa|fasta)$'
@@ -90,3 +88,5 @@ def make_contigs_and_split_hints(input_filenames, output_filenames):
             current_contig = contig_name
         hints_output_file.write(line)
     hints_output_file.close()
+
+cmdline.run(args)
