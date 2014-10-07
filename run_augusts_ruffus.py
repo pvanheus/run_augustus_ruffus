@@ -3,7 +3,7 @@
 from ruffus import *
 import ruffus.cmdline as cmdline
 
-from subprocess import Popen, PIPE
+import subprocess
 import shlex
 import sys
 import os.path
@@ -57,12 +57,14 @@ def sort_hints(input_filename, output_filename):
 HINTS_SUFFIX='.contig.hints'
 CONTIG_SUFFIX='.contig.fasta'
 unitig_re = re.compile('@unitig_(\d+)|quiver')
-@split([sort_hints, make_index], ['contig_list.txt','*'+HINTS_SUFFIX,'*'+CONTIG_SUFFIX])
-def make_contigs_and_split_hints(input_filenames, output_filenames):
-    hints_filename = input_filenames[0]
-    index_filename = input_filenames[1]
-    hints_file = open(index_filename)
-    contig_list_filename = output_filenames[0]
+@follows(make_index)
+@split(sort_hints, regex(r'.sorted.hints'), ['contig_list.txt','*'+HINTS_SUFFIX,'*'+CONTIG_SUFFIX], args.genome_filename)
+def make_contigs_and_split_hints(input_filename, output_filenames, genome_filename):
+    prefix = input_filename.replace('.sorted.hints', '')
+    genome_filename = genome_filename.replace(prefix, '')
+    index_filename = re.sub(FASTA_RE,'.idx', genome_filename)
+    hints_file = open(input_filename)
+    contig_list_filename = output_filenames[0].replace(prefix, '')
     contig_list_output_file = open(contig_list_filename,'w')
     genome_dict = SeqIO.index_db(index_filename)
     current_contig = None
@@ -73,16 +75,15 @@ def make_contigs_and_split_hints(input_filenames, output_filenames):
         assert len(fields) == 9, 'invalid hints format, expected 9 fields, got this line: {}'.format(line)
         contig_name = fields[0]
         if contig_name != current_contig:
-            hints_output_file = contig_to_output(contig_name, genome_dict, contig_list_output_file)
             if contig_name.startswith('@unitig'):
                 match = unitig_re.match(contig_name)
                 output_prefix = 'unitig_' + match.group(1)
             else:
                 output_prefix = contig_name
-            hints_output_file = open(output_prefix + HINTS_SUFFIX)
-            contig_output_file = open(output_prefix + CONTIG_SUFFIX)
+            hints_output_file = open(output_prefix + HINTS_SUFFIX,'w')
+            contig_output_file = open(output_prefix + CONTIG_SUFFIX, 'w')
             contig_seq = genome_dict[contig_name]
-            SeqIO.write(contig_output_file, contig_seq, 'fasta')
+            SeqIO.write(contig_seq, contig_output_file, 'fasta')
             contig_output_file.close()
             contig_list_output_file.write('\t'.join([contig_name, output_prefix + HINTS_SUFFIX, output_prefix + CONTIG_SUFFIX]) + '\n')
             current_contig = contig_name
