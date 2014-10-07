@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from ruffus import all
+from ruffus import *
 from subprocess import Popen, PIPE
 import shlex
 import sys
