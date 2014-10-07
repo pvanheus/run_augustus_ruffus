@@ -9,6 +9,7 @@ import logging
 import os
 from Bio import SeqIO
 import re
+import argparse
 
 MODULES_KEY = 'MODULESHOME'
 if MODULES_KEY in os.environ:
