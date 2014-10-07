@@ -22,6 +22,7 @@ parser = argparse.ArgumentParser(description='Use Ruffus to process .out files f
 parser.add_argument('--working_directory', '-W', default='.')
 parser.add_argument('genome_filename', help='FASTA format genome file, must end in .fa or .fasta')
 parser.add_argument('hints_filename', help='Augustus hints filename, generate from exonerate')
+args = parser.parse_args()
 
 if args.debug:
     logging.basicConfig(level=logging.DEBUG)
