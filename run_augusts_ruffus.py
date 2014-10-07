@@ -57,7 +57,7 @@ def sort_hints(input_filename, output_filename):
 HINTS_SUFFIX='.contig.hints'
 CONTIG_SUFFIX='.contig.fasta'
 unitig_re = re.compile('@unitig_(\d+)|quiver')
-@split([sort_hints, make_twobit], ['contig_list.txt','*'+HINTS_SUFFIX,'*'+CONTIG_SUFFIX])
+@split([sort_hints, make_index], ['contig_list.txt','*'+HINTS_SUFFIX,'*'+CONTIG_SUFFIX])
 def make_contigs_and_split_hints(input_filenames, output_filenames):
     hints_filename = input_filenames[0]
     hints_file = open(index_filename)
