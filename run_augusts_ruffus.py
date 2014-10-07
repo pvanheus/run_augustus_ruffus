@@ -60,8 +60,8 @@ unitig_re = re.compile('@unitig_(\d+)|quiver')
 @split([sort_hints, make_index], ['contig_list.txt','*'+HINTS_SUFFIX,'*'+CONTIG_SUFFIX])
 def make_contigs_and_split_hints(input_filenames, output_filenames):
     hints_filename = input_filenames[0]
-    hints_file = open(index_filename)
     index_filename = intput_filenames[1]
+    hints_file = open(index_filename)
     contig_list_filename = output_filenames[0]
     contig_list_output_file = open(contig_list_filename,'w')
     genome_dict = SeqIO.index_db(index_filename)
