@@ -58,7 +58,7 @@ HINTS_SUFFIX='.contig.hints'
 CONTIG_SUFFIX='.contig.fasta'
 unitig_re = re.compile('@unitig_(\d+)|quiver')
 @follows(make_index)
-@split(sort_hints, regex(r'.sorted.hints'), ['contig_list.txt','*'+HINTS_SUFFIX,'*'+CONTIG_SUFFIX], args.genome_filename)
+@transform(sort_hints, suffix('.sorted.hints'), ['contig_list.txt','*'+HINTS_SUFFIX,'*'+CONTIG_SUFFIX], args.genome_filename)
 def make_contigs_and_split_hints(input_filename, output_filenames, genome_filename):
     prefix = input_filename.replace('.sorted.hints', '')
     genome_filename = genome_filename.replace(prefix, '')
@@ -68,6 +68,7 @@ def make_contigs_and_split_hints(input_filename, output_filenames, genome_filena
     contig_list_output_file = open(contig_list_filename,'w')
     genome_dict = SeqIO.index_db(index_filename)
     current_contig = None
+    contigs_seen = set()
     for line in hints_file:
         if line.startswith('#'):
             continue
@@ -75,6 +76,7 @@ def make_contigs_and_split_hints(input_filename, output_filenames, genome_filena
         assert len(fields) == 9, 'invalid hints format, expected 9 fields, got this line: {}'.format(line)
         contig_name = fields[0]
         if contig_name != current_contig:
+            contigs_seen.add(contig_name)
             if contig_name.startswith('@unitig'):
                 match = unitig_re.match(contig_name)
                 output_prefix = 'unitig_' + match.group(1)
@@ -89,5 +91,23 @@ def make_contigs_and_split_hints(input_filename, output_filenames, genome_filena
             current_contig = contig_name
         hints_output_file.write(line)
     hints_output_file.close()
-
+    # write out all the contigs for which we have no hints, 
+    # along with blank hints files
+    for contig_name in genome_dict.keys():
+        if not contig_name in contigs_seen:
+            #TODO: make this into a function, we're re-using code here
+            if contig_name.startswith('@unitig'):
+                match = unitig_re.match(contig_name)
+                output_prefix = 'unitig_' + match.group(1)
+            else:
+                output_prefix = contig_name
+            hints_output_file = open(output_prefix + HINTS_SUFFIX,'w')
+            hints_output_file.close() # write a blank hints file
+            contig_output_file = open(output_prefix + CONTIG_SUFFIX, 'w')
+            contig_seq = genome_dict[contig_name]
+            SeqIO.write(contig_seq, contig_output_file, 'fasta')
+            contig_output_file.close()
+            contig_list_output_file.write('\t'.join([contig_name, output_prefix + HINTS_SUFFIX, output_prefix + CONTIG_SUFFIX]) + '\n')            
+    contig_list_output_file.close()
+    
 cmdline.run(args)
