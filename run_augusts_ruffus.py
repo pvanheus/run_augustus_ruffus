@@ -50,7 +50,7 @@ def make_index(input_file, output_file):
            suffix('.hints'),
            '.sorted.hints')
 def sort_hints(input_filename, output_filename):
-    cmd_string = 'sort -k1,1 -k4,4n -o {} {}'.format(output_filename, input_filename)
+    cmd_string = 'sort -k1,1 -k4,4n -T . -o {} {}'.format(output_filename, input_filename)
     cmd = shlex.split(cmd_string)
     process = subprocess.check_call(cmd) # throws CalledProcessError on non-zero return code
 
@@ -109,5 +109,5 @@ def make_contigs_and_split_hints(input_filename, output_filenames, genome_filena
             contig_output_file.close()
             contig_list_output_file.write('\t'.join([contig_name, output_prefix + HINTS_SUFFIX, output_prefix + CONTIG_SUFFIX]) + '\n')            
     contig_list_output_file.close()
-    
+
 cmdline.run(args)
